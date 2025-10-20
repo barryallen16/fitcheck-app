@@ -22,10 +22,10 @@ try:
             embeddings_npy=os.path.join(DATA_DIR, "men_wardrobe_embeddings.npy")
         ),
         # You can uncomment this when you have the women's data ready
-        # 'female': OutfitGenerator(
-        #     metadata_jsonl=os.path.join(DATA_DIR, "women_wardrobe_with_embeddings.jsonl"),
-        #     embeddings_npy=os.path.join(DATA_DIR, "women_wardrobe_embeddings.npy")
-        # )
+        'female': OutfitGenerator(
+            metadata_jsonl=os.path.join(DATA_DIR, "women_wardrobe_with_embeddings.jsonl"),
+            embeddings_npy=os.path.join(DATA_DIR, "women_wardrobe_embeddings.npy")
+        )
     }
     print("✅ Models loaded successfully!")
 except FileNotFoundError as e:

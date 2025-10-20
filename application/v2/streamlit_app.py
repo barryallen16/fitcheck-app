@@ -358,7 +358,7 @@ if st.session_state.favorites:
             with col:
                 try:
                     img = Image.open(item.get('image_path', ''))
-                    st.image(img, width='stretch')
+                    st.image(img, use_container_width=True)
                 except:
                     st.write("🖼️")
         
