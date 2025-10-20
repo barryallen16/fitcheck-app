@@ -71,15 +71,15 @@ class StyleRules:
     """Fashion style compatibility rules"""
     
     STYLE_COMPATIBILITY = {
-        'traditional': ['traditional', 'fusion', 'festive'],
+        'traditional': ['traditional', 'fusion', 'festive', 'casual'],  # Added 'casual'
         'contemporary': ['contemporary', 'fusion', 'casual', 'formal'],
-        'fusion': ['traditional', 'contemporary', 'fusion', 'casual'],
-        'casual': ['casual', 'contemporary', 'western', 'fusion'],
+        'fusion': ['traditional', 'contemporary', 'fusion', 'casual', 'western'],  # Added 'western'
+        'casual': ['casual', 'contemporary', 'western', 'fusion', 'traditional'],  # Added 'traditional'
         'formal': ['formal', 'contemporary', 'traditional'],
         'festive': ['festive', 'traditional', 'fusion'],
-        'western': ['western', 'casual', 'contemporary']
+        'western': ['western', 'casual', 'contemporary', 'traditional']  # Added 'traditional'
     }
-    
+
     @classmethod
     def are_compatible(cls, style1: str, style2: str) -> Tuple[bool, float]:
         """
@@ -261,7 +261,7 @@ class OutfitGenerator:
                 # *** END NEW WEATHER LOGIC ***
                 
                 # Style filter (exact match for string)
-                if style_filter:
+                if style_filter and style_filter != 'fusion':
                     item_style = classification.get('style', '')
                     if style_filter != str(item_style).lower():
                         continue
@@ -337,7 +337,35 @@ class OutfitGenerator:
                     'type': 'western',
                     'structure': 'shirt + pants'
                 })
-        
+        # Fusion combinations: Mix ethnic and western
+# Fusion: Ethnic Top + Western Bottom (Kurti + Jeans)
+        for top in ethnic_tops:
+            for bottom in western_bottoms:
+                combinations.append({
+                    'items': [top, bottom],
+                    'type': 'fusion',
+                    'structure': 'ethnic_top + western_bottom'
+                })
+
+        # Fusion: Western Top + Ethnic Bottom (Shirt + Palazzo)
+        for top in western_tops:
+            for bottom in ethnic_bottoms:
+                combinations.append({
+                    'items': [top, bottom],
+                    'type': 'fusion',
+                    'structure': 'western_top + ethnic_bottom'
+                })
+
+        # Fusion with layers (optional, for variety)
+        for top in ethnic_tops[:10]:
+            for bottom in western_bottoms[:10]:
+                for layer in layers[:5]:
+                    combinations.append({
+                        'items': [top, bottom, layer],
+                        'type': 'fusion_layered',
+                        'structure': 'ethnic_top + western_bottom + layer'
+                    })
+
         return combinations
     
     def score_outfit(self, outfit: Dict, preferences: Dict) -> OutfitScore:
@@ -495,11 +523,14 @@ def main():
     print("="*80)
     print("ADVANCED OUTFIT RECOMMENDATION ENGINE")
     print("="*80)
-    
+    # generator = OutfitGenerator(
+    #     metadata_jsonl="data/men_wardrobe_with_embeddings.jsonl",
+    #     embeddings_npy="data/men_wardrobe_embeddings.npy"
+    # )    
     # Initialize
     generator = OutfitGenerator(
-        metadata_jsonl="data/men_wardrobe_with_embeddings.jsonl",
-        embeddings_npy="data/men_wardrobe_embeddings.npy"
+        metadata_jsonl="data/women_wardrobe_with_embeddings.jsonl",
+        embeddings_npy="data/women_wardrobe_embeddings.npy"
     )
     
     # Test different scenarios

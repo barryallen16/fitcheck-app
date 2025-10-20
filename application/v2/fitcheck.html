@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AI Fashion Stylist</title>
+  
+  <!-- Fonts and Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      font-family: "Space Grotesk", sans-serif;
+      overscroll-behavior-y: contain;
+      background-color: #f8fafc; /* gray-50 */
+    }
+    .gender-btn.active {
+      background-color: #111827; /* gray-900 */
+      color: white;
+      transform: scale(1.05);
+    }
+    .gender-btn {
+      transition: all 0.2s ease;
+    }
+    #outfit-container {
+      touch-action: pan-y;
+    }
+    .slide-from-left { animation: slideFromLeft 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+    .slide-from-right { animation: slideFromRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    
+    @keyframes slideFromLeft {
+      from { opacity: 0; transform: translateX(-50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideFromRight {
+      from { opacity: 0; transform: translateX(50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen flex flex-col p-4 sm:p-6">
+
+  <!-- Header -->
+  <header id="main-header" class="sticky top-4 sm:top-6 z-50 flex justify-between items-center bg-black/40 backdrop-blur-md px-2 py-2 rounded-xl shadow-lg transition-opacity duration-500">
+    <a href="#" class="pl-2">
+      <img src="/images/logo/fitcheck-logo-v3.png" alt="FitCheck AI Logo" class="h-8 w-auto">
+    </a>
+    <div id="gender-control" class="bg-white/50 backdrop-blur-md border border-white/40 p-1 rounded-full shadow-sm flex items-center gap-1">
+      <button id="gender-male" data-gender="male" class="gender-btn flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm text-gray-800 font-medium focus:outline-none">
+        <i class="fa-solid fa-mars"></i><span>Male</span>
+      </button>
+      <button id="gender-female" data-gender="female" class="gender-btn flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm text-gray-800 font-medium focus:outline-none">
+        <i class="fa-solid fa-venus"></i><span>Female</span>
+      </button>
+    </div>
+  </header>
+  
+  <div class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
+
+    <!-- Hero Section -->
+    <section id="hero-section" class="flex flex-col justify-center items-center text-center p-6">
+      <h1 class="text-black text-3xl sm:text-4xl font-bold leading-tight">
+        Discover Your Next Favorite Outfit
+      </h1>
+      <p class="text-black/70 text-base sm:text-lg max-w-md mt-3">
+        Select your wardrobe to get started. Our AI will find the perfect combinations for you.
+      </p>
+      <div id="start-message" class="mt-6 text-gray-500 font-medium transition-opacity duration-300">
+        <i class="fa-solid fa-arrow-up mr-2"></i> Select a gender to begin
+      </div>
+    </section>
+
+    <!-- Outfits Section -->
+    <section id="outfit-section" class="hidden w-full flex-1 flex flex-col items-center justify-center pb-24">
+      <div id="outfit-counter" class="text-gray-700 font-semibold text-lg mb-4 h-6"></div>
+      <div id="outfit-container" class="relative w-full h-[70vh] max-h-[600px]">
+        
+        <!-- Loading Spinner -->
+         <div id="loading-spinner" class="hidden absolute inset-0 bg-white/50 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center text-center p-8 z-20">
+            <i class="fa-solid fa-spinner fa-spin text-5xl text-indigo-600"></i>
+            <p class="text-gray-600 mt-4 font-medium">Finding outfits...</p>
+        </div>
+        
+        <!-- No Outfits Message -->
+        <div id="no-outfits-message" class="hidden absolute inset-0 bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col items-center justify-center text-center p-8">
+            <i class="fa-solid fa-shirt text-5xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-bold text-gray-700">No Matches Found</h3>
+            <p class="text-gray-500 mt-2">Try adjusting your filters to discover more styles.</p>
+            <button id="reset-filters-btn" class="mt-6 bg-indigo-600 text-white px-5 py-2 rounded-full font-medium hover:bg-indigo-700 transition-all">
+                Reset Filters
+            </button>
+        </div>
+        
+        <!-- The Outfit Card -->
+        <div id="outfit-card" class="absolute inset-0 bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col p-3 gap-3">
+          <!-- Top Garment -->
+          <div class="flex-1 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
+            <img id="top-image" src="" class="w-full h-full object-contain" alt="Top garment">
+          </div>
+          <!-- Bottom Garment -->
+          <div class="flex-1 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
+            <img id="bottom-image" src="" class="w-full h-full object-contain" alt="Bottom garment">
+          </div>
+
+          <!-- Score Badge -->
+          <div id="score-badge" class="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i>
+            <span id="score-text"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Bottom Navigation Bar for Filters -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 p-3 z-50 opacity-0 -translate-y-10 transition-all duration-500">
+    <div class="max-w-md mx-auto bg-white/70 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-lg flex justify-around items-center p-2">
+      <button data-filter="occasion" class="filter-btn flex flex-col items-center text-gray-600 hover:text-indigo-600 transition-colors w-1/4 p-1">
+        <i class="fa-solid fa-champagne-glasses text-xl"></i>
+        <span class="text-xs mt-1">Occasion</span>
+      </button>
+      <button data-filter="weather" class="filter-btn flex flex-col items-center text-gray-600 hover:text-indigo-600 transition-colors w-1/4 p-1">
+        <i class="fa-solid fa-cloud-sun text-xl"></i>
+        <span class="text-xs mt-1">Weather</span>
+      </button>
+      <button data-filter="style" class="filter-btn flex flex-col items-center text-gray-600 hover:text-indigo-600 transition-colors w-1/4 p-1">
+        <i class="fa-solid fa-vest-patches text-xl"></i>
+        <span class="text-xs mt-1">Style</span>
+      </button>
+      <button data-filter="formality" class="filter-btn flex flex-col items-center text-gray-600 hover:text-indigo-600 transition-colors w-1/4 p-1">
+        <i class="fa-solid fa-user-tie text-xl"></i>
+        <span class="text-xs mt-1">Formality</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Filter Modal -->
+  <div id="filter-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-end justify-center">
+    <div id="modal-content" class="bg-white w-full max-w-md rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-out">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modal-title" class="text-xl font-bold">Select Filter</h3>
+            <button id="close-modal-btn" class="text-gray-400 hover:text-gray-700"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
+        <div id="modal-options" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const filterOptions = {
+        occasion: ["any", "casual", "formal", "office", "party", "wedding", "festival"],
+        weather: ["any", "summer", "winter", "monsoon"],
+        style: ["any", "traditional", "contemporary", "fusion", "western"],
+        formality: ["any", "casual", "semi_formal", "formal"]
+    };
+
+    // --- STATE ---
+    let currentGender = null;
+    let currentOutfits = [];
+    let currentIndex = 0;
+    let activeFilters = { occasion: 'any', weather: 'any', style: 'any', formality: 'any' };
+    let isLoading = false;
+
+    // --- DOM ELEMENTS ---
+    const [heroSection, outfitSection, bottomNav, startMessage, outfitCard] = [document.getElementById('hero-section'), document.getElementById('outfit-section'), document.getElementById('bottom-nav'), document.getElementById('start-message'), document.getElementById('outfit-card')];
+    const [topImage, bottomImage, scoreText] = [document.getElementById('top-image'), document.getElementById('bottom-image'), document.getElementById('score-text')];
+    const [noOutfitsMessage, loadingSpinner] = [document.getElementById('no-outfits-message'), document.getElementById('loading-spinner')];
+    const [filterModal, modalContent, modalTitle, modalOptions, closeModalBtn] = [document.getElementById('filter-modal'), document.getElementById('modal-content'), document.getElementById('modal-title'), document.getElementById('modal-options'), document.getElementById('close-modal-btn')];
+    const outfitCounter = document.getElementById('outfit-counter');
+
+    // --- INITIALIZATION ---
+    function initialize() {
+        document.querySelectorAll('.gender-btn').forEach(btn => btn.addEventListener('click', () => setGender(btn.dataset.gender)));
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.filter)));
+        closeModalBtn.addEventListener('click', closeModal);
+        filterModal.addEventListener('click', (e) => e.target === filterModal && closeModal());
+        document.getElementById('reset-filters-btn').addEventListener('click', () => {
+            Object.keys(activeFilters).forEach(key => activeFilters[key] = 'any');
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('text-indigo-600'));
+            fetchAndLoadOutfits();
+        });
+        setupSwipeListeners();
+    }
+
+    // --- UI TRANSITIONS ---
+    function showOutfitUI() {
+        heroSection.classList.add('hidden');
+        outfitSection.classList.remove('hidden');
+        startMessage.style.opacity = '0';
+        bottomNav.classList.remove('opacity-0', '-translate-y-10');
+        bottomNav.classList.add('opacity-100', 'translate-y-0');
+    }
+    
+    function setLoading(state) {
+        isLoading = state;
+        loadingSpinner.classList.toggle('hidden', !state);
+        outfitCard.classList.toggle('hidden', state);
+        outfitCounter.classList.toggle('hidden', state);
+        if(state) {
+          noOutfitsMessage.classList.add('hidden');
+        }
+    }
+
+    // --- GENDER AND OUTFIT LOGIC ---
+    function setGender(gender) {
+        if (currentGender === gender) return;
+        currentGender = gender;
+        document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender));
+        
+        if (!outfitSection.classList.contains('hidden')) {
+            fetchAndLoadOutfits();
+        } else {
+            showOutfitUI();
+            fetchAndLoadOutfits();
+        }
+    }
+    
+    async function fetchAndLoadOutfits() {
+        if (!currentGender || isLoading) return;
+        setLoading(true);
+        const params = new URLSearchParams({ gender: currentGender, ...activeFilters });
+        try {
+            const response = await fetch(`/get-outfits?${params.toString()}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const outfits = await response.json();
+            currentOutfits = outfits;
+            currentIndex = 0;
+            if (currentOutfits.length > 0) {
+                loadOutfit(currentIndex, 'initial');
+            } else {
+                showNoOutfitsMessage();
+            }
+        } catch (error) {
+            console.error("Failed to fetch outfits:", error);
+            showNoOutfitsMessage();
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function loadOutfit(index, direction) {
+        if (index < 0 || index >= currentOutfits.length) {
+            showNoOutfitsMessage();
+            return;
+        }
+        noOutfitsMessage.classList.add('hidden');
+        outfitCard.classList.remove('hidden');
+        outfitCounter.classList.remove('hidden');
+        outfitCounter.textContent = `${index + 1} / ${currentOutfits.length}`;
+
+        const outfit = currentOutfits[index];
+        outfitCard.style.transform = '';
+        outfitCard.style.opacity = '0';
+        outfitCard.className = 'absolute inset-0 bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col p-3 gap-3'; // Reset animation classes
+
+        const topImagePath = `/images/${outfit.top.image}`;
+        const bottomImagePath = `/images/${outfit.bottom.image}`;
+
+        Promise.all([preloadImage(topImagePath), preloadImage(bottomImagePath)]).then(([topImg, bottomImg]) => {
+            topImage.src = topImg.src;
+            bottomImage.src = bottomImg.src;
+            scoreText.textContent = `${Math.round(outfit.score * 100)}% Match`;
+            outfitCard.style.opacity = '1';
+            
+            if (direction === 'next') outfitCard.classList.add('slide-from-right');
+            else if (direction === 'prev') outfitCard.classList.add('slide-from-left');
+            else outfitCard.classList.add('fade-in');
+        });
+    }
+
+    function showNextOutfit() {
+        if (currentOutfits.length === 0) return;
+        currentIndex = (currentIndex + 1) % currentOutfits.length;
+        loadOutfit(currentIndex, 'next');
+    }
+
+    function showPrevOutfit() {
+        if (currentOutfits.length === 0) return;
+        currentIndex = (currentIndex - 1 + currentOutfits.length) % currentOutfits.length;
+        loadOutfit(currentIndex, 'prev');
+    }
+
+    function preloadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    function showNoOutfitsMessage() {
+        outfitCard.classList.add('hidden');
+        outfitCounter.classList.add('hidden');
+        noOutfitsMessage.classList.remove('hidden');
+    }
+    
+    // --- SWIPE LOGIC ---
+    let startX = 0, startY = 0, isDragging = false;
+    
+    function setupSwipeListeners() {
+        const card = outfitCard;
+        card.addEventListener('mousedown', onDragStart);
+        document.addEventListener('mousemove', onDragMove);
+        document.addEventListener('mouseup', onDragEnd);
+        card.addEventListener('touchstart', onDragStart, { passive: true });
+        document.addEventListener('touchmove', onDragMove, { passive: true });
+        document.addEventListener('touchend', onDragEnd);
+    }
+    
+    function onDragStart(e) {
+        if (isLoading || currentOutfits.length <= 1) return;
+        isDragging = true;
+        startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+        startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
+        outfitCard.style.transition = 'none';
+    }
+
+    function onDragMove(e) {
+        if (!isDragging) return;
+        const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+        const deltaX = currentX - startX;
+        // Only allow horizontal movement
+        const rotate = deltaX * 0.1;
+        outfitCard.style.transform = `translate3d(${deltaX}px, 0, 0) rotate(${rotate}deg)`;
+    }
+
+    function onDragEnd(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const endX = e.type.includes('mouse') ? e.pageX : e.changedTouches[0].pageX;
+        const deltaX = endX - startX;
+        
+        outfitCard.style.transition = 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+        const swipeThreshold = window.innerWidth / 4;
+
+        if (currentOutfits.length <= 1) {
+             outfitCard.style.transform = '';
+             return;
+        }
+
+        if (deltaX > swipeThreshold) { // Swiped right (previous)
+            outfitCard.style.transform = `translate3d(150%, 0, 0) rotate(15deg)`;
+            setTimeout(showPrevOutfit, 200);
+        } else if (deltaX < -swipeThreshold) { // Swiped left (next)
+            outfitCard.style.transform = `translate3d(-150%, 0, 0) rotate(-15deg)`;
+            setTimeout(showNextOutfit, 200);
+        } else {
+            outfitCard.style.transform = '';
+        }
+    }
+    
+    // --- MODAL LOGIC ---
+    function openModal(filterType) {
+        modalTitle.textContent = `Select ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`;
+        modalOptions.innerHTML = '';
+        filterOptions[filterType].forEach(option => {
+            const isActive = activeFilters[filterType] === option;
+            const btn = document.createElement('button');
+            btn.textContent = option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            btn.dataset.option = option;
+            btn.className = `p-3 rounded-lg text-sm font-medium border transition-all ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-100 text-gray-700 border-gray-200 hover:border-indigo-400'}`;
+            btn.onclick = () => {
+                activeFilters[filterType] = option;
+                document.querySelector(`.filter-btn[data-filter="${filterType}"]`).classList.toggle('text-indigo-600', option !== 'any');
+                fetchAndLoadOutfits();
+                closeModal();
+            };
+            modalOptions.appendChild(btn);
+        });
+        filterModal.classList.remove('hidden');
+        setTimeout(() => modalContent.style.transform = 'translateY(0)', 10);
+    }
+
+    function closeModal() {
+        modalContent.style.transform = 'translateY(100%)';
+        setTimeout(() => filterModal.classList.add('hidden'), 300);
+    }
+
+    initialize();
+});
+</script>
+</body>
+</html>
+

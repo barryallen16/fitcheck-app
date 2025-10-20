@@ -304,17 +304,17 @@ def main():
     
     # Configuration
     configs = [
-        {
-            'input': 'data/men_wardrobe_database.jsonl',
-            'embeddings': 'data/men_wardrobe_embeddings.npy',
-            'metadata': 'data/men_wardrobe_with_embeddings.jsonl'
-        },
-        # Add women's wardrobe if needed
         # {
-        #     'input': 'data/women_wardrobe_database.jsonl',
-        #     'embeddings': 'data/women_wardrobe_embeddings.npy',
-        #     'metadata': 'data/women_wardrobe_with_embeddings.jsonl'
-        # }
+        #     'input': 'data/men_wardrobe_database.jsonl',
+        #     'embeddings': 'data/men_wardrobe_embeddings.npy',
+        #     'metadata': 'data/men_wardrobe_with_embeddings.jsonl'
+        # },
+        # Add women's wardrobe if needed
+        {
+            'input': 'data/women_wardrobe_database.jsonl',
+            'embeddings': 'data/women_wardrobe_embeddings.npy',
+            'metadata': 'data/women_wardrobe_with_embeddings.jsonl'
+        }
     ]
     
     # Process each configuration
